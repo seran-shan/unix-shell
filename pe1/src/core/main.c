@@ -1,0 +1,199 @@
+#include<stdio.h>
+#include<time.h>
+#include<stdlib.h>
+#include<string.h>
+
+/**
+ * @brief structure for alarm.
+ * 
+ */
+// struct alarm 
+// {
+//     int pid;
+//     time_t alarm;
+// };
+
+/**
+ * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
+ * Will change this to a structure as shown over this later on. 
+ */
+int alarm_arr[10];
+
+/**
+ * @brief Method for checking if list is empty. We iterate thorugh the list 
+ * and return a number. If sum is 0, the array does not have any elements.
+ * 
+ * @return sum. 
+ */
+int isEmpty(){
+    int sum = 0;
+    for (int i=0; i<10; i++){
+        sum += alarm_arr[i];
+    }
+    return sum;
+}
+
+/**
+ * @brief Method for checking if the list is full. If the statement is true, is will set the value to 0 and
+ * break the loop. We do not need to check any more as it is a space in the list.
+ * 
+ * @return value.
+ */
+int isFull(){
+    int value = 0;
+    for (int i=0; i<10; i++){
+        if (alarm_arr[i] == 0){
+            value = 0;
+            break;
+        } else {
+            value = 1;
+        }
+    }
+    return value;
+}
+
+/**
+ * @brief This is the method that will be called if user choses to list all alarms.
+ * The method iterates thorugh the list and displays an alarm like this:
+ * "Alarm X at YYYY-MM-DD hh:mm:ss". `strftime` is used to convert the timestamp into a readable string.
+ * If the list is empty the user will be returned to the menu. The alarm number will be 
+ * index + 1, since array indices starts at 0 in computer science. 
+ */
+void list(){
+    if (isEmpty() == 0) {
+        printf("The list is empty.\n");
+    } else {
+        for (int i=0; i<10; i++){
+            if (alarm_arr[i] != 0){
+                char buff[20];
+                time_t t = alarm_arr[i];
+                strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
+                int index = i + 1;
+                printf("Alarm %d at %s.\n", index, buff);
+            }
+        }
+    }
+}
+
+//TODO - Kill child process.
+/**
+ * @brief This is the method that will be called if user choses to cancel an alarm.
+ * The user will also be prompted an input where the program will tell the user to 
+ * write the alarm number of the alarm to cancel. We use fgets to get the number.
+ * After the user has written the alarm number, we subtract it with 1. By using
+ * the index we set the specific element to zero.
+ * 
+ */
+void cancel(){
+    if (isEmpty() == 0) {
+        printf("The list is empty.\n");
+    } else {
+        char buf[2];
+        printf("Cancel which alarm? ");
+        fgets(buf, 4, stdin);
+        int indexOfAlarm;
+        sscanf(buf, "%d", &indexOfAlarm);
+        indexOfAlarm --;
+        alarm_arr[indexOfAlarm] = 0;
+    }
+}
+
+/**
+ * @brief This is the method that will be called if user choses to exit out of the program.
+ * The program will be cancelled.
+ */
+void optOut(){
+    printf("Goodbye!\n");
+}
+
+//TODO - Task c, must create fork method that runs the alarm.
+/**
+ * @brief This is the method that will be called if user choses to schedule an alarm. First of all
+ * we use the method called isFull() to check if it any space for a new alarm in the list. If it is full the process will
+ * be cancelled and the user will be returned to main menu. 
+ * 
+ * The method calls an input, we have decided to use fgets to get input from the user. We
+ * use strptime and mktime to format the input into an unix timestamp. We iterate through the array and
+ * at the first empty slot we add the timestamp. 
+ * 
+ * After this we check the difference between the upcoming alarm and today. We use difftime to do this.
+ * The result is represented in seconds.
+ * 
+ */
+void schedule(){  
+    if (isFull() == 1) {
+        printf("The list is full.\n");
+    } else {
+        char buf[20];
+        printf("Schedule alarm at which date and time? ");
+        fgets(buf, 22, stdin);
+        struct tm tm;
+        strptime(buf, "%Y-%m-%d %H:%M:%S", &tm);
+        time_t t = mktime(&tm);
+        for (int i=0; i<10; i++){
+            if (alarm_arr[i] == 0){
+                alarm_arr[i] = t;
+                break;
+            }
+        }
+        time_t today = time(0);
+        int diff = difftime(t, today);
+        printf("Scheduling alarm in %d seconds.\n", diff);
+    }
+}
+
+/**
+ * @brief This is the method for opening the menu. This menu will be called infinitely, until the method returns
+ * 0. We use fgets to get the input from the user. The input will then be checked by using a switch. Based on what 
+ * character is received the correct method willbe called. 
+ * 
+ * @return 1 or 0 based on if the loop should be broke or not. 
+ */
+int openMenu(){
+    char selected[1];
+    printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit) \n");
+    fgets(selected, 3, stdin);
+    switch (selected[0])
+    {
+        case 's':
+            schedule();
+            return 1;
+            break;
+        case 'l':
+            list();
+            return 1;
+            break;
+        case 'c':
+            cancel();
+            return 1;
+            break;
+        case 'x':
+            optOut();
+            return 0;
+            break;
+        default:
+            printf("Nothing selected! \n");
+            return 1;
+            break;
+    }
+}
+
+//TODO - Not finished, will be updated.
+/**
+ * @brief This is the main method, and will display a welcome text. We use strftime to show 
+ * the date and time of today. We use a while with 1 to make it looping infinitely. If the called
+ * method openMenu() returns 0, the loop will be discontinued. 
+ * 
+ */
+int main(){
+    char buff[20];
+    time_t now = time(NULL);
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
+    printf("Welcome to the alarm clock! It is currently %s\n", buff);
+    while(1) {
+        if (openMenu() != 1){
+            break;
+        }
+    }
+    return 0;
+}
