@@ -2,6 +2,23 @@
 #include<time.h>
 #include<stdlib.h>
 #include<string.h>
+#include <unistd.h> 
+
+/**
+ * @brief structure for alarm.
+ * We have the process id and the time stamp.
+ */
+struct alarm 
+{
+    pid_t pid;
+    time_t alarm;
+};
+
+/**
+ * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
+ */
+struct alarm alarm_arr[10];
+=======
 
 /**
  * @brief structure for alarm.
@@ -28,7 +45,7 @@ int alarm_arr[10];
 int isEmpty(){
     int sum = 0;
     for (int i=0; i<10; i++){
-        sum += alarm_arr[i];
+        sum += alarm_arr[i].alarm;
     }
     return sum;
 }
@@ -42,7 +59,7 @@ int isEmpty(){
 int isFull(){
     int value = 0;
     for (int i=0; i<10; i++){
-        if (alarm_arr[i] == 0){
+        if (alarm_arr[i].alarm == 0){
             value = 0;
             break;
         } else {
@@ -64,9 +81,9 @@ void list(){
         printf("The list is empty.\n");
     } else {
         for (int i=0; i<10; i++){
-            if (alarm_arr[i] != 0){
+            if (alarm_arr[i].alarm != 0){
                 char buff[20];
-                time_t t = alarm_arr[i];
+                time_t t = alarm_arr[i].alarm;
                 strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
                 int index = i + 1;
                 printf("Alarm %d at %s.\n", index, buff);
@@ -94,7 +111,7 @@ void cancel(){
         int indexOfAlarm;
         sscanf(buf, "%d", &indexOfAlarm);
         indexOfAlarm --;
-        alarm_arr[indexOfAlarm] = 0;
+        alarm_arr[indexOfAlarm].alarm = 0;
     }
 }
 
@@ -106,18 +123,18 @@ void optOut(){
     printf("Goodbye!\n");
 }
 
-//TODO - Task c, must create fork method that runs the alarm.
 /**
  * @brief This is the method that will be called if user choses to schedule an alarm. First of all
  * we use the method called isFull() to check if it any space for a new alarm in the list. If it is full the process will
  * be cancelled and the user will be returned to main menu. 
  * 
- * The method calls an input, we have decided to use fgets to get input from the user. We
- * use strptime and mktime to format the input into an unix timestamp. We iterate through the array and
- * at the first empty slot we add the timestamp. 
+ * The method calls an input, we have decided to use fgets to get input from the user. We use strptime and mktime to format 
+ * the input into an unix timestamp. We find the difference using difftime(), and print this out. 
  * 
- * After this we check the difference between the upcoming alarm and today. We use difftime to do this.
- * The result is represented in seconds.
+ * After this we create a child process using fork(). We iterate through the array and at the first empty slot 
+ * we add the information. We check if the child process is successfully started and then return to the main process. 
+ * The child process will then sleep() for amount of seconds from right now until the alarm should be sounded.
+ * After the amount of sleep it is printed RING. The child process is exited using exit().
  * 
  */
 void schedule(){  
@@ -130,15 +147,24 @@ void schedule(){
         struct tm tm;
         strptime(buf, "%Y-%m-%d %H:%M:%S", &tm);
         time_t t = mktime(&tm);
-        for (int i=0; i<10; i++){
-            if (alarm_arr[i] == 0){
-                alarm_arr[i] = t;
-                break;
-            }
-        }
         time_t today = time(0);
         int diff = difftime(t, today);
         printf("Scheduling alarm in %d seconds.\n", diff);
+        pid_t pid = fork();
+
+        for (int i=0; i<10; i++){
+            if (alarm_arr[i].alarm == 0){
+                alarm_arr[i].alarm = t;
+                alarm_arr[i].pid = pid;
+                break;
+            }
+        }
+        if (pid != 0) {
+            return;
+        }
+        sleep(diff);
+        printf("RING\n");
+        exit(0);
     }
 }
 
