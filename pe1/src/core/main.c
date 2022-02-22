@@ -154,7 +154,10 @@ void schedule(){
             return;
         }
         sleep(diff);
-        printf("RING\n");
+        // printf("RING\n");
+        char *path_to_sound = "src/audio/rickroll.mp3";
+        char *path_to_executable = "/usr/bin/afplay";
+        execl(path_to_executable, path_to_executable, path_to_sound, (char *)NULL);
         exit(0);
     }
 }
