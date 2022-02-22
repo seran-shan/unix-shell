@@ -18,6 +18,23 @@ struct alarm
  * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
  */
 struct alarm alarm_arr[10];
+=======
+
+/**
+ * @brief structure for alarm.
+ * 
+ */
+// struct alarm 
+// {
+//     int pid;
+//     time_t alarm;
+// };
+
+/**
+ * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
+ * Will change this to a structure as shown over this later on. 
+ */
+int alarm_arr[10];
 
 /**
  * @brief Method for checking if list is empty. We iterate thorugh the list 
@@ -111,9 +128,8 @@ void optOut(){
  * we use the method called isFull() to check if it any space for a new alarm in the list. If it is full the process will
  * be cancelled and the user will be returned to main menu. 
  * 
- * The method calls an input, we have decided to use fgets to get input from the user. We
- * use strptime and mktime to format the input into an unix timestamp. We find the difference using difftime(), and 
- * print this out. 
+ * The method calls an input, we have decided to use fgets to get input from the user. We use strptime and mktime to format 
+ * the input into an unix timestamp. We find the difference using difftime(), and print this out. 
  * 
  * After this we create a child process using fork(). We iterate through the array and at the first empty slot 
  * we add the information. We check if the child process is successfully started and then return to the main process. 
