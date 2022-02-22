@@ -166,10 +166,10 @@ void schedule(){
  */
 void cleanZombieProcess() {
     for (int i = 0; i < sizeof(alarm_arr)/sizeof(alarm_arr[0]); i++) {
-        struct alarm alarm = alarm_arr[i];
+        struct alarm *alarm = &alarm_arr[i];
 
         int status = -1;      
-        waitpid(alarm.pid, &status, 1);
+        waitpid(alarm->pid, &status, 1);
 
         if (WIFEXITED(status)) {
             wait(&status);
