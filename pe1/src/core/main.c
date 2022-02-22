@@ -18,7 +18,6 @@ struct alarm
  * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
  */
 struct alarm alarm_arr[10];
-=======
 
 /**
  * @brief structure for alarm.
