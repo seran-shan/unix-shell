@@ -164,15 +164,15 @@ void schedule(){
  * 
  * @param alarms 
  */
-void cleanZombieProcess(struct alarm *alarms[]) {
-    for (int i = 0; i < sizeof(alarms); i++) {
-        struct alarm alarm = *alarms[i];
+void cleanZombieProcess() {
+    for (int i = 0; i < sizeof(alarm_arr)/sizeof(alarm_arr[0]); i++) {
+        struct alarm alarm = alarm_arr[i];
 
         int status = -1;      
-        waitpid(&alarm.pid, -1, 1);
+        waitpid(alarm.pid, &status, 1);
 
         if (WIFEXITED(status)) {
-            wait(-1);
+            wait(&status);
         }
     }
 }
@@ -188,7 +188,7 @@ int openMenu() {
     char selected[1];
     printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit) \n");
     fgets(selected, 3, stdin);
-    cleanZombieProcess(&alarm_arr);
+    cleanZombieProcess();
     switch (selected[0])
     {
         case 's':
