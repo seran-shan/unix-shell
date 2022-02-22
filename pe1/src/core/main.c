@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h> 
 #include <signal.h>
+#include <sys/wait.h>
 
 /**
  * @brief structure for alarm.
@@ -159,16 +160,35 @@ void schedule(){
 }
 
 /**
+ * @brief Method to kill zombie process.
+ * 
+ * @param alarms 
+ */
+void cleanZombieProcess(struct alarm *alarms[]) {
+    for (int i = 0; i < sizeof(alarms); i++) {
+        struct alarm alarm = *alarms[i];
+
+        int status = -1;      
+        waitpid(&alarm.pid, -1, 1);
+
+        if (WIFEXITED(status)) {
+            wait(-1);
+        }
+    }
+}
+
+/**
  * @brief This is the method for opening the menu. This menu will be called infinitely, until the method returns
  * 0. We use fgets to get the input from the user. The input will then be checked by using a switch. Based on what 
  * character is received the correct method willbe called. 
  * 
  * @return 1 or 0 based on if the loop should be broke or not. 
  */
-int openMenu(){
+int openMenu() {
     char selected[1];
     printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit) \n");
     fgets(selected, 3, stdin);
+    cleanZombieProcess(&alarm_arr);
     switch (selected[0])
     {
         case 's':
