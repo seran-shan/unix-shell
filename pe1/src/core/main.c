@@ -3,7 +3,6 @@
 #include<stdlib.h>
 #include<string.h>
 #include <unistd.h> 
-#include <signal.h>
 
 /**
  * @brief structure for alarm.
@@ -19,6 +18,22 @@ struct alarm
  * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
  */
 struct alarm alarm_arr[10];
+
+/**
+ * @brief structure for alarm.
+ * 
+ */
+// struct alarm 
+// {
+//     int pid;
+//     time_t alarm;
+// };
+
+/**
+ * @brief Array of the structure alarm. Allows maximum 10 entries/alarms.
+ * Will change this to a structure as shown over this later on. 
+ */
+int alarm_arr[10];
 
 /**
  * @brief Method for checking if list is empty. We iterate thorugh the list 
@@ -76,14 +91,13 @@ void list(){
     }
 }
 
+//TODO - Kill child process.
 /**
  * @brief This is the method that will be called if user choses to cancel an alarm.
  * The user will also be prompted an input where the program will tell the user to 
  * write the alarm number of the alarm to cancel. We use fgets to get the number.
- * After the user has written the alarm number, we subtract it by 1. By using
- * the index we set the specific element to zero. After this we kill the child process
- * of the specific element using the kill(2) method. If the process is completed successfully
- * we print out "Alarm X is canceled.".
+ * After the user has written the alarm number, we subtract it with 1. By using
+ * the index we set the specific element to zero.
  * 
  */
 void cancel(){
@@ -97,10 +111,6 @@ void cancel(){
         sscanf(buf, "%d", &indexOfAlarm);
         indexOfAlarm --;
         alarm_arr[indexOfAlarm].alarm = 0;
-        int result = kill(alarm_arr[indexOfAlarm].pid, SIGTERM);
-        if (result == 0) {
-            printf("Alarm %d is canceled.\n", indexOfAlarm+1);
-        }
     }
 }
 
@@ -117,9 +127,8 @@ void optOut(){
  * we use the method called isFull() to check if it any space for a new alarm in the list. If it is full the process will
  * be cancelled and the user will be returned to main menu. 
  * 
- * The method calls an input, we have decided to use fgets to get input from the user. We
- * use strptime and mktime to format the input into an unix timestamp. We find the difference using difftime(), and 
- * print this out. 
+ * The method calls an input, we have decided to use fgets to get input from the user. We use strptime and mktime to format 
+ * the input into an unix timestamp. We find the difference using difftime(), and print this out. 
  * 
  * After this we create a child process using fork(). We iterate through the array and at the first empty slot 
  * we add the information. We check if the child process is successfully started and then return to the main process. 
