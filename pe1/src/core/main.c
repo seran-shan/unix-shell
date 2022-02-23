@@ -156,8 +156,14 @@ void schedule(){
         sleep(diff);
         // printf("RING\n");
         char *path_to_sound = "src/audio/rickroll.mp3";
-        char *path_to_executable = "/usr/bin/afplay";
-        execl(path_to_executable, path_to_executable, path_to_sound, (char *)NULL);
+
+        #if __APPLE__
+            char *path_to_executable = "/usr/bin/afplay";
+            execl(path_to_executable, path_to_executable, path_to_sound, (char *)NULL);
+        #elif __linux__
+            char *path_to_executable = "/usr/bin/mpg123";
+            execl(path_to_executable, path_to_executable, path_to_sound, (char *)NULL);
+        #endif
         exit(0);
     }
 }
