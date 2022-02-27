@@ -57,7 +57,9 @@ int isFull(){
 /**
  * @brief This is the method that will be called if user choses to list all alarms.
  * The method iterates thorugh the list and displays an alarm like this:
- * "Alarm X at YYYY-MM-DD hh:mm:ss". `strftime` is used to convert the timestamp into a readable string.
+ * "Alarm X at YYYY-MM-DD hh:mm:ss". 
+ * 
+ * `strftime` is used to convert the timestamp into a readable string.
  * If the list is empty the user will be returned to the menu. The alarm number will be 
  * index + 1, since array indices starts at 0 in computer science. 
  */
@@ -79,13 +81,12 @@ void list(){
 
 /**
  * @brief This is the method that will be called if user choses to cancel an alarm.
- * The user will also be prompted an input where the program will tell the user to 
+ * The user will be prompted an input where the program will tell the user to 
  * write the alarm number of the alarm to cancel. We use fgets to get the number.
- * After the user has written the alarm number, we subtract it by 1. By using
- * the index we set the specific element to zero. After this we kill the child process
- * of the specific element using the kill(2) method. If the process is completed successfully
- * we print out "Alarm X is canceled.".
  * 
+ * The input, will be subtracted by 1. By using the index we set the specific element to zero. 
+ * After this we kill the child process of the specific element using the kill(2) method. 
+ * If the process is completed successfully we print out "Alarm X is canceled.".
  */
 void cancel(){
     if (isEmpty() == 0) {
@@ -107,7 +108,7 @@ void cancel(){
 
 /**
  * @brief This is the method that will be called if user choses to exit out of the program.
- * The program will be cancelled.
+ * The program will be exited.
  */
 void optOut(){
     printf("Goodbye!\n");
@@ -116,16 +117,20 @@ void optOut(){
 /**
  * @brief This is the method that will be called if user choses to schedule an alarm. First of all
  * we use the method called isFull() to check if it any space for a new alarm in the list. If it is full the process will
- * be cancelled and the user will be returned to main menu. 
+ * be stopped and the user will be returned to main menu. 
  * 
- * The method calls an input, we have decided to use fgets to get input from the user. We
- * use strptime and mktime to format the input into an unix timestamp. We find the difference using difftime(), and 
+ * The method calls an input, we have decided to use fgets to get input from the user. If the time that is received
+ * is before the current time, we will print out `The alarm must be in the future.` and the user will be returned
+ * to the menu.
+ * 
+ * We use strptime and mktime to format the input into an unix timestamp. We find the difference using difftime(), and 
  * print this out. 
  * 
  * After this we create a child process using fork(). We iterate through the array and at the first empty slot 
  * we add the information. We check if the child process is successfully started and then return to the main process. 
  * The child process will then sleep() for amount of seconds from right now until the alarm should be sounded.
- * After the amount of sleep it is printed RING. The child process is exited using exit().
+ * After the amount of sleep it is played a sound `rickroll.mp3`. We also have a check to determine what operating system 
+ * the user is on, and based on this use the correct player.
  * 
  */
 void schedule(){  
@@ -139,6 +144,10 @@ void schedule(){
         strptime(buf, "%Y-%m-%d %H:%M:%S", &tm);
         time_t t = mktime(&tm);
         time_t today = time(0);
+        if (t < today) {
+            printf("The alarm must be in the future.\n");
+            return;
+        }
         int diff = difftime(t, today);
         printf("Scheduling alarm in %d seconds.\n", diff);
         pid_t pid = fork();
@@ -154,7 +163,6 @@ void schedule(){
             return;
         }
         sleep(diff);
-        // printf("RING\n");
         char *path_to_sound = "src/audio/rickroll.mp3";
 
         #if __APPLE__
@@ -164,14 +172,13 @@ void schedule(){
             char *path_to_executable = "/usr/bin/mpg123";
             execl(path_to_executable, path_to_executable, path_to_sound, (char *)NULL);
         #endif
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 }
 
 /**
  * @brief Method to kill zombie process.
  * 
- * @param alarms 
  */
 void cleanZombieProcess() {
     for (int i = 0; i < sizeof(alarm_arr)/sizeof(alarm_arr[0]); i++) {
@@ -223,7 +230,6 @@ int openMenu() {
     }
 }
 
-//TODO - Not finished, will be updated.
 /**
  * @brief This is the main method, and will display a welcome text. We use strftime to show 
  * the date and time of today. We use a while with 1 to make it looping infinitely. If the called
