@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h> 
-#include <signal.h>
-#include <sys/wait.h>
+#include "../../include/core/main.h"
 
 /**
  * @brief structure for alarm.
@@ -144,8 +138,8 @@ void schedule(){
         strptime(buf, "%Y-%m-%d %H:%M:%S", &tm);
         time_t t = mktime(&tm);
         time_t today = time(0);
-        if (t < today) {
-            printf("The alarm must be in the future.\n");
+         if (t < today) {
+            printf("The alarm must be in the future, and in this format yyyy-mm-dd hh:mm:ss.\n");
             return;
         }
         int diff = difftime(t, today);
