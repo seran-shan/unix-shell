@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <strings.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 #define PORT 6789
 #define MAXREQ (4096*10124)
@@ -35,7 +38,7 @@ int main() {
     //Binds the socket to a address
     if (bind(sockfd, (struct sockaddr * ) &serv_addr, sizeof(serv_addr) < 0))
     {
-        error("Somethin went wrong when binding the socket to address");
+        error("Something went wrong when binding the socket to address");
     }
     
     listen(sockfd, 5);
@@ -60,7 +63,7 @@ int main() {
             error("Something went wrong when reading from the socket");
         }
 
-        //Generates responses
+        //Generates responses and send it back
         snprintf(body, sizeof(body),
             "<html>\n<body>\n"
             "<h1>Hello web browser</h1>\nYour request was\n"
@@ -72,12 +75,12 @@ int main() {
         snprintf(msg, sizeof (msg),
             "HTTP/1.0 200 OK\n"
             "Content-Type: text/html\n"
-            "Content-Length: %d\n\n%s", 
-            strlen (body), body
+            "Content-Length: %lu\n\n%s", 
+            strlen(body), body
         );
 
         //Sends the response
-        n = write (newsockfd,msg,strlen(msg));
+        n = write (newsockfd, msg, strlen(msg));
 
         if (n < 0) 
         {
@@ -85,6 +88,6 @@ int main() {
         }
 
         //Closes the connection
-        close (newsockfd); 
+        close(newsockfd); 
     }   
 }
