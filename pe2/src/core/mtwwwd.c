@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 
-#define PORT 8000
+#define PORT 6789
 #define MAXREQ (4096*10124)
 
 char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
@@ -35,6 +35,8 @@ void initalize_server() {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(PORT);
+
+    printf("Server running at port: 6789");
 
     //Binds the socket to a address
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
