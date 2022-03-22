@@ -1,6 +1,11 @@
 #ifndef ____BBUFFER___H___
 #define ____BBUFFER___H___
 
+#include <stdio.h>
+#include <stdint.h>
+
+#include "sem.h"
+
 /*
  * Bounded Buffer implementation to manage int values that supports multiple 
  * readers and writers.
