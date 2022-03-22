@@ -12,6 +12,6 @@
 
 
 #define PORT 6789
-#define MAXREQ (4096*10124)
+#define MAXREQ (4096*1024)
 
 #endif
