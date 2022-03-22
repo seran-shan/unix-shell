@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
-
 #include "../../include/core/bbuffer.h"
-#include "../../include/core/sem.h"
 
 /**
  * @brief check header file for instruction
@@ -10,7 +6,12 @@
  */
 typedef struct BNDBUF 
 {
-
+    int input;
+    int output;
+    int* data;
+    int count;
+    SEM* bufferFull;
+    SEM* bufferEmpty;
 } BNDBUF;
 
 /**
@@ -19,7 +20,24 @@ typedef struct BNDBUF
  */
 BNDBUF *bb_init(unsigned int size) 
 {
+    BNDBUF *buffer = malloc(sizeof(BNDBUF));
 
+    buffer->data = malloc(sizeof(int)*size);
+    buffer->bufferFull = sem_init(0);
+
+    if(!(buffer->bufferFull)){
+        free(buffer->data);
+        return NULL;
+    }
+
+    buffer->bufferEmpty = sem_init(size);
+
+    if(!(buffer->bufferEmpty)){
+        free(buffer->data);
+        sem_del(buffer->bufferEmpty);
+        return NULL;
+    }
+    return buffer;
 }
 
 /**
@@ -28,7 +46,9 @@ BNDBUF *bb_init(unsigned int size)
  */
 void bb_del(BNDBUF *bb)
 {
-
+    free(bb->data);
+    sem_del(bb->bufferFull);
+    sem_del(bb->bufferEmpty);
 }
 
 /**
@@ -37,7 +57,13 @@ void bb_del(BNDBUF *bb)
  */
 int  bb_get(BNDBUF *bb)
 {
+    p(bb->bufferFull);
+    int last = bb->count-1;
+    int data = bb->data[last];
+    bb->count = bb->count - 1;
+    v(bb->bufferEmpty);
 
+    return data;
 }
 
 /**
@@ -46,5 +72,8 @@ int  bb_get(BNDBUF *bb)
  */
 void bb_add(BNDBUF *bb, int fd)
 {
-    
+    P(&bb->bufferEmpty);
+    bb->data[bb->count] = fd;
+    bb->count++;
+    V(bb->bufferFull);
 }
