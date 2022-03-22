@@ -1,7 +1,3 @@
-#include <stdlib.h>
-#include <pthread.h>
-#include <errno.h>
-
 #include "../../include/core/sem.h"
 
 typedef struct SEM
