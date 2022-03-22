@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <pthread.h>
+
 
 #include "bbuffer.h"
 
