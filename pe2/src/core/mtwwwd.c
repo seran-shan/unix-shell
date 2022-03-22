@@ -1,14 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-
-#define PORT 6789
-#define MAXREQ (4096*10124)
+#include "mtwwwd.h"
 
 char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
+char *path;
+int port;
+int num_of_threads;
+int num_of_bufslots;
+
+BNDBUF *bb;
+
 
 void error(const char *msg) {
     perror(msg);
