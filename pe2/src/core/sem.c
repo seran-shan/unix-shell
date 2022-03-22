@@ -23,6 +23,7 @@ SEM *sem_init(int initVal)
     if (!errno) 
     {
         pthread_mutex_destroy(&sem->lock);
+        free(sem);
         return NULL;
     }
 
@@ -31,6 +32,7 @@ SEM *sem_init(int initVal)
     if (!errno) 
     {
         pthread_cond_destroy(&sem->cond);
+        free(sem);
         return NULL;
     }
 
@@ -45,6 +47,7 @@ int sem_del(SEM *sem)
         errno = pthread_cond_destroy(&sem->cond);
         if (!errno)
         {
+            free(sem);
             return 0;
         }
         
@@ -56,7 +59,7 @@ void P(SEM *sem)
 {
     pthread_mutex_lock(&sem->lock);
 
-    while (sem->count < 1)
+    while (sem->count == 0)
     {
         pthread_cond_wait(&sem->cond, &sem->lock);
     }
@@ -74,11 +77,11 @@ void P(SEM *sem)
 void V(SEM *sem)
 {
     pthread_mutex_lock(&sem->lock);
-
-    if (sem->count <=0)
-        pthread_cond_signal(&sem->cond);
-    
     sem->count++;
+
+    if (sem->count == 1) {
+        pthread_cond_signal(&sem->cond);
+    }
     
     pthread_mutex_unlock(&sem->lock);
 }
