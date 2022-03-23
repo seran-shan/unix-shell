@@ -6,7 +6,7 @@ By Francin Anoj Vincent, Julius Schmidt Birkevold and  Seran Shanmugathas
 
 ```
 cd pe2
-gcc sem.c bbuffer.h mtwwwd -o mtwwwd
+gcc sem.c bbuffer.c mtwwwd.c -o mtwwwd
 ./mtwwd doc
 ```
 
