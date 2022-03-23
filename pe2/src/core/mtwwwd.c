@@ -9,6 +9,10 @@ char *root;
 
 BNDBUF *bb;
 
+struct tdata {
+    int thread_index;
+    pthread_mutex_t *accept_mutex;
+};
 
 char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
 char *file_buf = 0;
@@ -19,7 +23,7 @@ int sockfd, clientfd;
 int n;
 socklen_t clilen;
 
-void handle_request(int clientfd);
+void *handle_request(void *pArg);
 char *read_html_file(char *path);
 
 
@@ -62,6 +66,18 @@ void initalize_server()
 
     listen(sockfd, 5);
 
+    pthread_mutex_t gLock;
+
+    struct tdata tdarray[num_of_threads];
+
+    for (int i = 0; i < num_of_threads; i++) {
+        tdarray[i].accept_mutex = &gLock;
+        tdarray[i].thread_index = i;
+    }
+
+    pthread_t tHandles[num_of_threads];
+    pthread_mutex_init(&gLock, NULL);
+
     while (1)
     {
         clilen = sizeof(cli_addr);
@@ -73,7 +89,15 @@ void initalize_server()
             error("Somethin went wrong when accepting a new socket");
         }
         bzero(buffer, sizeof(buffer));
-        handle_request(newsockfd);
+
+        bb_add(bb, newsockfd);
+
+        for (n = 0; n < num_of_threads; n++) {
+            pthread_create(&(tHandles[n]),        // Returned thread handle
+			    NULL,                  // Thread Attributes
+			    handle_request,      // Thread function
+			    (void*)&(tdarray[n])); // Data for process_requests
+        }
 
         // Closes the connection
         close(newsockfd);
@@ -81,8 +105,10 @@ void initalize_server()
     close(sockfd);
 }
 
-void handle_request(int clientfd)
+void *handle_request(void *pArg)
 {
+    struct tdata td = *((struct tdata *)pArg);
+    int clientfd = bb_get(bb);
 
     // read the HTTP request
     n = read(clientfd, buffer, sizeof(buffer) - 1);
@@ -122,16 +148,20 @@ void handle_request(int clientfd)
     {
         error("Something went wrong when writing from the socket");
     }
+    return NULL;
 }
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
+    if (argc < 3)
     {
         printf("Usage: %s <www-path>\n", argv[0]);
         return EXIT_FAILURE;
     }
     root = argv[1];
+    num_of_threads = atoi(argv[2]);
+    num_of_bufslots = atoi(argv[3]);
+    bb = bb_init(num_of_bufslots);
     initalize_server();
 }
 
