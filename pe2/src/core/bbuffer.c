@@ -21,7 +21,9 @@ typedef struct BNDBUF
 BNDBUF *bb_init(unsigned int size) 
 {
     BNDBUF *buffer = malloc(sizeof(BNDBUF));
-
+    buffer->input = 0;
+    buffer->output = 0;
+    buffer->count = 0;
     buffer->data = malloc(sizeof(int)*size);
     buffer->bufferFull = sem_init(0);
 

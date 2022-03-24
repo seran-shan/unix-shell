@@ -8,22 +8,15 @@ int num_of_bufslots;
 char *root;
 
 BNDBUF *bb;
-
-struct tdata {
-    int thread_index;
-    pthread_mutex_t *accept_mutex;
-};
-
-char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
 char *file_buf = 0;
-char *root;
 // socketheaders for server and client
 struct sockaddr_in serv_addr, cli_addr;
-int sockfd, clientfd;
+int sockfd, clientfd, newsockfd;
 int n;
 socklen_t clilen;
 
-void *handle_request(void *pArg);
+
+void *handle_request();
 char *read_html_file(char *path);
 
 
@@ -34,13 +27,12 @@ void error(const char *msg)
     exit(1);
 }
 
-// Socket headers for server and client
-int sockfd, newsockfd;
-socklen_t clilen;
-struct sockaddr_in serv_addr, cli_addr;
-
-void initalize_server()
+void initialize_server()
 {
+    pthread_t tHandles[num_of_threads];
+    int listArg[num_of_threads];
+
+    bb = bb_init(num_of_bufslots);
 
     // Creates the socket
     sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -64,25 +56,19 @@ void initalize_server()
         error("Something went wrong when binding the socket to address");
     }
 
-    listen(sockfd, 5);
-
-    pthread_mutex_t gLock;
-
-    struct tdata tdarray[num_of_threads];
-
-    for (int i = 0; i < num_of_threads; i++) {
-        tdarray[i].accept_mutex = &gLock;
-        tdarray[i].thread_index = i;
+    int i;
+    for (i = 0; i < num_of_threads; i++ ) {
+        listArg[i] = i;
+        int ret = pthread_create(&tHandles[i], NULL, &handle_request, &listArg[i]);
     }
-
-    pthread_t tHandles[num_of_threads];
-    pthread_mutex_init(&gLock, NULL);
+    listen(sockfd, 5);
 
     while (1)
     {
         clilen = sizeof(cli_addr);
         // Accepts a new connection
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        bb_add(bb, newsockfd);
 
         if (newsockfd < 0)
         {
@@ -90,26 +76,20 @@ void initalize_server()
         }
         bzero(buffer, sizeof(buffer));
 
-        bb_add(bb, newsockfd);
-
-        for (n = 0; n < num_of_threads; n++) {
-            pthread_create(&(tHandles[n]),        // Returned thread handle
-			    NULL,                  // Thread Attributes
-			    handle_request,      // Thread function
-			    (void*)&(tdarray[n])); // Data for process_requests
-        }
-
         // Closes the connection
         close(newsockfd);
     }
-    close(sockfd);
 }
 
-void *handle_request(void *pArg)
+void *handle_request()
 {
-    struct tdata td = *((struct tdata *)pArg);
-    int clientfd = bb_get(bb);
+    clientfd = bb_get(bb);
 
+    if (clientfd < 0) {
+        error("Error");
+    }
+
+    bzero(buffer, sizeof(buffer));
     // read the HTTP request
     n = read(clientfd, buffer, sizeof(buffer) - 1);
 
@@ -161,8 +141,7 @@ int main(int argc, char *argv[])
     root = argv[1];
     num_of_threads = atoi(argv[2]);
     num_of_bufslots = atoi(argv[3]);
-    bb = bb_init(num_of_bufslots);
-    initalize_server();
+    initialize_server();
 }
 
 char *read_html_file(char *path)
