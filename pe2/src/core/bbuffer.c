@@ -21,7 +21,9 @@ typedef struct BNDBUF
 BNDBUF *bb_init(unsigned int size) 
 {
     BNDBUF *buffer = malloc(sizeof(BNDBUF));
-
+    buffer->input = 0;
+    buffer->output = 0;
+    buffer->count = 0;
     buffer->data = malloc(sizeof(int)*size);
     buffer->bufferFull = sem_init(0);
 
@@ -57,11 +59,11 @@ void bb_del(BNDBUF *bb)
  */
 int  bb_get(BNDBUF *bb)
 {
-    p(bb->bufferFull);
+    P(bb->bufferFull);
     int last = bb->count-1;
     int data = bb->data[last];
     bb->count = bb->count - 1;
-    v(bb->bufferEmpty);
+    V(bb->bufferEmpty);
 
     return data;
 }
@@ -72,7 +74,7 @@ int  bb_get(BNDBUF *bb)
  */
 void bb_add(BNDBUF *bb, int fd)
 {
-    P(&bb->bufferEmpty);
+    P(bb->bufferEmpty);
     bb->data[bb->count] = fd;
     bb->count++;
     V(bb->bufferFull);
