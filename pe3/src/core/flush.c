@@ -160,11 +160,7 @@ void execute_command(char **args)
     }
     else if (pid == 0) 
     {
-        if (redirect_io(args) == 1)
-        {
-            execl("/bin/sh", "/bin/sh", "-c", input, (char *)0);
-        }
-        else (execvp(args[0], args) == -1) 
+        if (execvp(args[0], args) == -1) 
         {
             perror("Error");
         }
@@ -240,11 +236,39 @@ void execute_pipeline(char **args)
 int main(int argc, char *argv[]) 
 {
     char **args[];
-    char *input;
+    char input[KILOBYTE];
     int status;
-    int background;
-    int pipe_index;
     int i;
 
-    
+    while (1) 
+    {
+        print_current_dir();
+        fgets(input, sizeof(input), stdin);
+        if (strcmp(input, "\n") == 0) 
+        {
+            continue;
+        }
+        if (strcmp(input, "exit\n") == 0) 
+        {
+            exit(EXIT_SUCCESS);
+        }
+        if (strcmp(input, "jobs\n") == 0) 
+        {
+            //TODO: add method to print backround processes
+        }
+        split_string(input, args);
+        if (check_redirect_io(args)) 
+        {
+            redirect_io(args);
+        }
+        if (find_pipe(args) != -1) 
+        {
+            execute_pipeline(args);
+        }
+        else 
+        {
+            execute_command(args);
+        }
+    }
+    return 0;    
 }
