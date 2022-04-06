@@ -178,7 +178,8 @@ void execute_command(char **args)
     {
         if (check_backround(args)) 
         {
-            // TODO: add method to add backround process to list
+            int key = length()++;
+            insertFirst(key, pid, args);
         }
         else 
         {
