@@ -67,34 +67,9 @@ void change_dir(char *path)
 }
 
 /**
- * @brief Implement simple I/O redirection for stdin and stdout when 
- * this is indicated on the command line using the < or > characters 
- * followed by a file name.
+ * @brief check if redirect io
  * 
  */
-void redirect_io(char **args) 
-{
-    int i;
-    for (i = 0; args[i] != NULL; i++) 
-    {
-        if (strcmp(args[i], "<") == 0) 
-        {
-            args[i] = args[i + 1];
-            args[i + 1] = NULL;
-            close(STDIN_FILENO);
-            open(args[i], O_RDONLY);
-        }
-        else if (strcmp(args[i], ">") == 0) 
-        {
-            args[i] = args[i + 1];
-            args[i + 1] = NULL;
-            close(STDOUT_FILENO);
-            open(args[i], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        }
-    }
-}
-
-// check if redirect io
 int check_redirect_io(char **args) 
 {
     int i;
@@ -108,6 +83,30 @@ int check_redirect_io(char **args)
     return 0;
 }
 
+
+/**
+ * @brief Implement simple I/O redirection for stdin and stdout when 
+ * this is indicated on the command line using the < or > characters 
+ * followed by a file name.
+ * 
+ */
+void redirect_io(char **args) 
+{
+    int i;
+    for (i = 0; args[i] != NULL; i++) 
+    {
+        if (strcmp(args[i], "<") == 0) 
+        {
+            args[i] = args[i + 1];
+            freopen(args[i], "r", stdin);
+        }
+        else if (strcmp(args[i], ">") == 0) 
+        {
+            args[i] = args[i + 1];
+            freopen(args[i], "w", stdout);
+        }
+    }
+}
 
 
 /**
@@ -160,7 +159,11 @@ void execute_command(char **args)
     }
     else if (pid == 0) 
     {
-        if (execvp(args[0], args) == -1) 
+        if (check_redirect_io(args)) 
+        {
+            redirect_io(args);
+        }
+        else if (execvp(args[0], args) == -1) 
         {
             perror("Error");
         }
@@ -172,7 +175,7 @@ void execute_command(char **args)
     } 
     else 
     {
-        if (check_backround(args)) 
+        if (check_background(args)) 
         {
             int key = length() + 1;
             insertFirst(key, pid, args);
@@ -233,44 +236,50 @@ void execute_pipeline(char **args)
 
 /**
  * @brief main method, 
- * terminates process on 0x04 (control-d). 
+ * terminates process on 0x04 (control-d) 
  */
 int main(int argc, char *argv[]) 
 {
-    char **args[];
-    char input[KILOBYTE];
+    char **args;
+    char *input;
     int status;
-    int i;
 
     while (1) 
     {
         print_current_dir();
-        fgets(input, sizeof(input), stdin);
-        if (strcmp(input, "\n") == 0) 
+        scanf("%[^\n]", input);
+        if (input == NULL) 
+        {
+            printf("\n");
+            exit(EXIT_SUCCESS);
+        }
+        if (strcmp(input, "") == 0) 
         {
             continue;
         }
-        if (strcmp(input, "exit\n") == 0) 
+
+        split_string(input, args);
+      
+        if (strcmp(args[0], "cd") == 0) 
+        {
+            change_dir(args[1]);
+        }
+        else if (strcmp(args[0], "exit") == 0) 
         {
             exit(EXIT_SUCCESS);
         }
-        if (strcmp(input, "jobs\n") == 0) 
+        else if (strcmp(args[0], "jobs") == 0) 
         {
             printList();
         }
-        split_string(input, args);
-        if (check_redirect_io(args)) 
-        {
-            redirect_io(args);
-        }
-        if (find_pipe(args) != -1) 
+        else if (find_pipe(args) != -1) 
         {
             execute_pipeline(args);
-        }
+        } 
         else 
         {
             execute_command(args);
         }
     }
-    return 0;    
+    return 0;
 }
