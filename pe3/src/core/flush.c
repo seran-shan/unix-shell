@@ -174,7 +174,7 @@ void execute_command(char **args)
     {
         if (check_backround(args)) 
         {
-            int key = length()++;
+            int key = length() + 1;
             insertFirst(key, pid, args);
         }
         else 
