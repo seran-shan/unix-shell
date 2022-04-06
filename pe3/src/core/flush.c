@@ -168,6 +168,7 @@ void execute_command(char **args)
     } 
     else 
     {
+        
         do 
         {
             waitpid(pid, &status, WUNTRACED);
