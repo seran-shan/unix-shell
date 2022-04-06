@@ -154,8 +154,65 @@ void execute_command(char **args)
     int status;
 
     pid = fork();
+    if (pid == -1)
+    {
+        perror("Fork failed");
+    }
+    else if (pid == 0) 
+    {
+        if (redirect_io(args) == 1)
+        {
+            execl("/bin/sh", "/bin/sh", "-c", input, (char *)0);
+        }
+        else (execvp(args[0], args) == -1) 
+        {
+            perror("Error");
+        }
+        exit(EXIT_FAILURE);
+    } 
+    else if (pid < 0) 
+    {
+        perror("Error");
+    } 
+    else 
+    {
+        if (check_backround(args)) 
+        {
+            // TODO: add method to add backround process to list
+        }
+        else 
+        {
+            waitpid(pid, &status, WUNTRACED);
+            if (WIFEXITED(status)) 
+            {
+                print_exit_status(status, args);
+            }
+        }
+    }
+}
+
+/**
+ * @brief execute pipeline args
+ * 
+ */
+void execute_pipeline(char **args) 
+{
+    int pipefd[2];
+    pid_t pid;
+    int status;
+
+    if (pipe(pipefd) == -1) 
+    {
+        perror("Error");
+        exit(EXIT_FAILURE);
+    }
+
+    pid = fork();
     if (pid == 0) 
     {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
         if (execvp(args[0], args) == -1) 
         {
             perror("Error");
@@ -182,5 +239,12 @@ void execute_command(char **args)
  */
 int main(int argc, char *argv[]) 
 {
+    char **args[];
+    char *input;
+    int status;
+    int background;
+    int pipe_index;
+    int i;
 
+    
 }
