@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
         }
         if (strcmp(input, "jobs\n") == 0) 
         {
-            //TODO: add method to print backround processes
+            printList();
         }
         split_string(input, args);
         if (check_redirect_io(args)) 
